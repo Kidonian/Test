@@ -1,7 +1,16 @@
-FROM nginx
-ENV AUTHOR=Docker
+FROM buildbot/buildbot-worker
 
-WORKDIR /usr/share/nginx/html
-COPY Hello_docker.html /usr/share/nginx/html
+USER root
+RUN apt update && apt upgrade -y
+# git & curl deja installé
+# Docker
+RUN apt-get -y install git apt-transport-https ca-certificates curl gnupg2 software-properties-common
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -
+RUN add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 
-CMD cd /usr/share/nginx/html && sed -e s/Docker/"$AUTHOR"/ Hello_docker.html > index.html ; nginx -g 'daemon off;'
+RUN apt-get update
+RUN apt-get -y install docker-ce
+# on doit juste pouvoir faire un docker build
+#Attention a verifier les lancemeent avec les -v docker.sock et --privileged
+COPY ./Dockerfile .
+RUN usermod -aG docker buildbot
